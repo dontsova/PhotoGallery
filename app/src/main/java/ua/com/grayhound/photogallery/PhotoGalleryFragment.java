@@ -7,9 +7,11 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
 import android.widget.GridView;
 
 import java.io.IOException;
+import java.util.ArrayList;
 
 /**
  * Created by admin on 08.10.2015.
@@ -18,12 +20,19 @@ public class PhotoGalleryFragment extends Fragment {
     private static final String TAG = "PhotoGalleryFragment";
 
     GridView mGridView;
+    ArrayList<GalleryItem> mItems;
 
-    private class FetchItemTask extends AsyncTask<Void,Void,Void> {
+    private class FetchItemsTask extends AsyncTask<Void,Void,ArrayList<GalleryItem>> {
         @Override
-        protected Void doInBackground(Void... params) {
-            new FlickrFetchr().fetchItems();
-            return null;
+        protected ArrayList<GalleryItem> doInBackground(Void... params) {
+            return new FlickrFetchr().fetchItems();
+
+        }
+
+        @Override
+        protected void onPostExecute(ArrayList<GalleryItem> items) {
+            mItems = items;
+            setupAdapter();
         }
     }
 
@@ -33,7 +42,7 @@ public class PhotoGalleryFragment extends Fragment {
 
         setRetainInstance(true);
 
-        new FetchItemTask().execute();
+        new FetchItemsTask().execute();
     }
 
     @Override
@@ -43,6 +52,19 @@ public class PhotoGalleryFragment extends Fragment {
 
         mGridView = (GridView)v.findViewById(R.id.gridView);
 
+        setupAdapter();
+
         return v;
+    }
+
+    void setupAdapter() {
+        if (getActivity() == null || mGridView == null) return;
+
+        if (mItems != null) {
+            mGridView.setAdapter( new ArrayAdapter<GalleryItem>(getActivity(),
+                    android.R.layout.simple_gallery_item, mItems));
+        } else {
+            mGridView.setAdapter(null);
+        }
     }
 }
